@@ -15,10 +15,11 @@
  */
 package io.atomix.primitive.partition;
 
-import io.atomix.cluster.NodeId;
-
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
@@ -27,13 +28,13 @@ import static com.google.common.base.MoreObjects.toStringHelper;
  */
 public class PrimaryTerm {
   private final long term;
-  private final NodeId primary;
-  private final List<NodeId> backups;
+  private final Member primary;
+  private final List<Member> candidates;
 
-  public PrimaryTerm(long term, NodeId primary, List<NodeId> backups) {
+  public PrimaryTerm(long term, Member primary, List<Member> candidates) {
     this.term = term;
     this.primary = primary;
-    this.backups = backups;
+    this.candidates = candidates;
   }
 
   /**
@@ -50,8 +51,17 @@ public class PrimaryTerm {
    *
    * @return the primary node identifier
    */
-  public NodeId primary() {
+  public Member primary() {
     return primary;
+  }
+
+  /**
+   * Returns the list of candidate nodes.
+   *
+   * @return the list of candidate nodes
+   */
+  public List<Member> candidates() {
+    return candidates;
   }
 
   /**
@@ -59,13 +69,31 @@ public class PrimaryTerm {
    *
    * @return the backup nodes
    */
-  public List<NodeId> backups() {
+  public List<Member> backups(int numBackups) {
+    if (primary == null) {
+      return new ArrayList<>(0);
+    }
+
+    List<Member> backups = new ArrayList<>();
+    Set<MemberGroupId> groups = new HashSet<>();
+    groups.add(primary.groupId());
+
+    int i = 0;
+    for (int j = 0; j < numBackups; j++) {
+      while (i < candidates.size()) {
+        Member member = candidates.get(i++);
+        if (groups.add(member.groupId())) {
+          backups.add(member);
+          break;
+        }
+      }
+    }
     return backups;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(term, primary, backups);
+    return Objects.hash(term, primary, candidates);
   }
 
   @Override
@@ -74,7 +102,7 @@ public class PrimaryTerm {
       PrimaryTerm term = (PrimaryTerm) object;
       return term.term == this.term
           && Objects.equals(term.primary, primary)
-          && Objects.equals(term.backups, backups);
+          && Objects.equals(term.candidates, candidates);
     }
     return false;
   }
@@ -84,7 +112,7 @@ public class PrimaryTerm {
     return toStringHelper(this)
         .add("term", term)
         .add("primary", primary)
-        .add("backups", backups)
+        .add("backups", candidates)
         .toString();
   }
 }

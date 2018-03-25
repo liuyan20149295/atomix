@@ -25,7 +25,6 @@ import io.atomix.messaging.ManagedMessagingService;
 import io.atomix.primitive.PrimitiveTypeRegistry;
 import io.atomix.primitive.partition.ManagedPartitionGroup;
 import io.atomix.primitive.partition.ManagedPartitionService;
-import io.atomix.primitive.partition.PartitionGroup;
 import io.atomix.primitive.partition.impl.DefaultPartitionService;
 import io.atomix.protocols.backup.partition.PrimaryBackupPartitionGroup;
 import io.atomix.protocols.raft.RaftProtocol;
@@ -128,9 +127,9 @@ public abstract class AbstractAtomixTest {
 
       @Override
       protected ManagedPartitionGroup buildSystemPartitionGroup() {
-        return RaftPartitionGroup.builder("core")
+        return RaftPartitionGroup.builder(SYSTEM_GROUP_NAME)
             .withStorageLevel(StorageLevel.MEMORY)
-            .withDataDirectory(new File(dataDirectory, "core"))
+            .withDataDirectory(new File(dataDirectory, SYSTEM_GROUP_NAME))
             .withNumPartitions(1)
             .build();
       }
@@ -148,9 +147,9 @@ public abstract class AbstractAtomixTest {
               .withNumPartitions(numDataPartitions)
               .build());
         } else {
-          boolean hasConsensus = partitionGroups.stream()
+          boolean hasCore = partitionGroups.stream()
               .anyMatch(group -> group.type() == RaftProtocol.TYPE);
-          if (!hasConsensus) {
+          if (!hasCore) {
             partitionGroups.add(RaftPartitionGroup.builder(CORE_GROUP_NAME)
                 .withStorageLevel(StorageLevel.MEMORY)
                 .withDataDirectory(new File(dataDirectory, CORE_GROUP_NAME))

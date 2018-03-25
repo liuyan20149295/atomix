@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Open Networking Foundation
+ * Copyright 2018-present Open Networking Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,26 @@
  */
 package io.atomix.primitive.partition;
 
-import io.atomix.utils.event.ListenerService;
-
-import java.util.concurrent.CompletableFuture;
+import io.atomix.cluster.Node;
 
 /**
- * Partition primary election.
+ * Partition member group.
  */
-public interface PrimaryElection extends ListenerService<PrimaryElectionEvent, PrimaryElectionEventListener> {
+public interface MemberGroup {
 
   /**
-   * Enters the primary election.
+   * Returns the group identifier.
    *
-   * @param member the member to enter the election
-   * @return the current term
+   * @return the group identifier
    */
-  CompletableFuture<PrimaryTerm> enter(Member member);
+  MemberGroupId id();
 
   /**
-   * Returns the current term.
+   * Returns a boolean indicating whether the given node is a member of the group.
    *
-   * @return the current term
+   * @param node the node to check
+   * @return indicates whether the given node is a member of the group
    */
-  CompletableFuture<PrimaryTerm> getTerm();
-
-  /**
-   * Closes the primary election.
-   */
-  void close();
+  boolean isMember(Node node);
 
 }
